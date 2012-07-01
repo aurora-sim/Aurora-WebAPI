@@ -214,7 +214,7 @@ namespace Aurora.Services
         Dictionary<WebAPIHttpMethod, List<string>> APIMethods();
     }
 
-    public class WebAPI_StreamHandler : BaseStreamHandler
+    public class WebAPI_StreamHandler : BaseRequestHandler, IStreamedRequestHandler
     {
         const string httpPath = "/webapi";
 
