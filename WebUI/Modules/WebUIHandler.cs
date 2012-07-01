@@ -458,7 +458,7 @@ namespace Aurora.Services
         #endregion
     }
 
-    public class WebUIHTTPHandler : BaseStreamHandler
+    public class WebUIHTTPHandler : BaseRequestHandler, IStreamedRequestHandler
     {
         protected WebUIHandler WebUI;
         protected string m_password;
