@@ -252,7 +252,7 @@ namespace Aurora.Services
 
         private void SetUpWebUIPHP(uint port, string phpBinPath)
         {
-            HttpServer.HttpModules.AdvancedFileModule.CreateHTTPServer(Util.BasePathCombine("data//WebUI//"), "/", @phpBinPath, port, false);
+            //HttpServer.HttpModules.AdvancedFileModule.CreateHTTPServer(Util.BasePathCombine("data//WebUI//"), "/", @phpBinPath, port, false);
         }
 
         public void FinishedStartup()
