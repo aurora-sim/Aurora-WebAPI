@@ -1915,7 +1915,7 @@ namespace Aurora.Services
                 {
                     region = regiondata.Get(regionID, scopeID);
                 }else if(regionName != string.Empty){
-                    List<GridRegion> regions = regiondata.Get(regionName, scopeID);
+                    List<GridRegion> regions = regiondata.Get(regionName, scopeID, null, null);
                     region = regions.Count > 0 ? regions[0] : null;
                 }
                 if (region != null)
