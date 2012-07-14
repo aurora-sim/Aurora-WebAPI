@@ -1359,7 +1359,7 @@ namespace OpenSim.Services
                 {
                     region = regiondata.Get(regionID, scopeID);
                 }else if(regionName != string.Empty){
-                    region = regiondata.Get(regionName, scopeID)[0];
+                    region = regiondata.Get(regionName, scopeID, null, null)[0];
                 }
                 if (region != null)
                 {
