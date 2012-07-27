@@ -209,7 +209,7 @@ namespace Aurora.Services
         /// <returns>true if the API call should be allowed, false otherwise.</returns>
         bool AllowAPICall(string method, OSHttpRequest request, OSHttpResponse response);
 
-        byte[] doAPICall(BaseStreamHandler caller, string path, Stream requestData, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+        byte[] doAPICall(BaseRequestHandler caller, string path, Stream requestData, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
 
         Dictionary<WebAPIHttpMethod, List<string>> APIMethods();
     }
@@ -752,7 +752,7 @@ namespace Aurora.Services
         private void PromoteUser (string[] cmd)
         {
             string name = MainConsole.Instance.Prompt ("Name of user");
-            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount (UUID.Zero, name);
+            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount (null, name);
             if (acc == null)
             {
                 MainConsole.Instance.Warn ("You must create the user before promoting them.");
@@ -778,7 +778,7 @@ namespace Aurora.Services
         private void DemoteUser (string[] cmd)
         {
             string name = MainConsole.Instance.Prompt ("Name of user");
-            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount (UUID.Zero, name);
+            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount (null, name);
             if (acc == null)
             {
                 MainConsole.Instance.Warn ("User does not exist, no action taken.");
@@ -1011,7 +1011,7 @@ namespace Aurora.Services
             return false;
         }
 
-        public byte[] doAPICall(BaseStreamHandler caller, string path, Stream requestData, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] doAPICall(BaseRequestHandler caller, string path, Stream requestData, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             OSDMap resp = new OSDMap();
             object checking = Enum.Parse(typeof(WebAPIHttpMethod), caller.HttpMethod);
@@ -1253,7 +1253,7 @@ namespace Aurora.Services
         private OSDMap ChangeName(OSDMap map)
         {
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, map["UUID"].AsUUID());
+            UserAccount user = accountService.GetUserAccount(null, map["UUID"].AsUUID());
             OSDMap resp = new OSDMap();
 
             bool verified = user != null;
@@ -1276,11 +1276,11 @@ namespace Aurora.Services
             resp["agent"] = OSD.FromBoolean(!editRLInfo); // if we have no RLInfo, editing account is assumed to be successful.
             resp["account"] = OSD.FromBoolean(false);
             UUID principalID = map["UserID"].AsUUID();
-            UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, principalID);
+            UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, principalID);
             if(account != null)
             {
                 account.Email = map["Email"];
-                if (m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, map["Name"].AsString()) == null)
+                if (m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, map["Name"].AsString()) == null)
                 {
                     account.Name = map["Name"];
                 }
@@ -1352,7 +1352,7 @@ namespace Aurora.Services
         private OSDMap CheckIfUserExists(OSDMap map)
         {
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, map["Name"].AsString());
+            UserAccount user = accountService.GetUserAccount(null, map["Name"].AsString());
 
             bool Verified = user != null;
             OSDMap resp = new OSDMap();
@@ -1407,13 +1407,13 @@ namespace Aurora.Services
             PasswordHash = PasswordHash.StartsWith("$1$") ? PasswordHash.Remove(0, 3) : Util.Md5Hash(PasswordHash); //remove $1$
 
             accountService.CreateUser(Name, PasswordHash, Email);
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, Name);
+            UserAccount user = accountService.GetUserAccount(null, Name);
             IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService> ();
             IGridService gridService = m_registry.RequestModuleInterface<IGridService> ();
             if (agentInfoService != null && gridService != null)
             {
                 UUID homeRegion;
-                GridRegion r = UUID.TryParse(HomeRegion, out homeRegion) ? gridService.GetRegionByUUID(UUID.Zero, homeRegion) : gridService.GetRegionByName (UUID.Zero, HomeRegion);
+                GridRegion r = UUID.TryParse(HomeRegion, out homeRegion) ? gridService.GetRegionByUUID(null, homeRegion) : gridService.GetRegionByName (null, HomeRegion);
                 if (r != null)
                 {
                     agentInfoService.SetHomePosition(user.PrincipalID.ToString(), r.RegionID, new Vector3(r.RegionSizeX / 2, r.RegionSizeY / 2, 20), Vector3.Zero);
@@ -1489,7 +1489,7 @@ namespace Aurora.Services
         private OSDMap Authenticated(OSDMap map)
         {
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, map["UUID"].AsUUID());
+            UserAccount user = accountService.GetUserAccount(null, map["UUID"].AsUUID());
 
             bool Verified = user != null;
             OSDMap resp = new OSDMap();
@@ -1520,7 +1520,7 @@ namespace Aurora.Services
             if (map.ContainsKey("UserName") && map.ContainsKey("PasswordHash") && map.ContainsKey("ActivationToken"))
             {
                 IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-                UserAccount user = accountService.GetUserAccount(UUID.Zero, map["UserName"].ToString());
+                UserAccount user = accountService.GetUserAccount(null, map["UserName"].ToString());
                 if (user != null)
                 {
                     IAgentConnector con = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
@@ -1568,19 +1568,19 @@ namespace Aurora.Services
             resp["Verified"] = OSD.FromBoolean(false);
 
 
-            account = accountService.GetUserAccount(UUID.Zero, Name);
+            account = accountService.GetUserAccount(null, Name);
             if (agentConnector == null || accountService == null)
             {
                 return resp;
             }
 
-            account = accountService.GetUserAccount(UUID.Zero, Name);
+            account = accountService.GetUserAccount(null, Name);
 
             if (account != null)
             {
-                if (loginService.VerifyClient(account.PrincipalID, Name, "UserAccount", Password, account.ScopeID))
+                if (loginService.VerifyClient(account.PrincipalID, Name, "UserAccount", Password))
                 {
-                    account = accountService.GetUserAccount(UUID.Zero, Name);
+                    account = accountService.GetUserAccount(null, Name);
                     if (asAdmin)
                     {
                         IAgentInfo agent = agentConnector.GetAgent(account.PrincipalID);
@@ -1652,7 +1652,7 @@ namespace Aurora.Services
             string email = map["Email"].AsString();
 
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, map["UUID"].AsUUID());
+            UserAccount user = accountService.GetUserAccount(null, map["UUID"].AsUUID());
             OSDMap resp = new OSDMap();
 
             bool verified = user != null;
@@ -1674,7 +1674,7 @@ namespace Aurora.Services
 
             OSDMap resp = new OSDMap();
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, Name);
+            UserAccount user = accountService.GetUserAccount(null, Name);
             bool verified = user != null;
             resp["Verified"] = OSD.FromBoolean(verified);
 
@@ -1723,10 +1723,10 @@ namespace Aurora.Services
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
             IAuthenticationService auths = m_registry.RequestModuleInterface<IAuthenticationService>();
 
-            UserAccount account = accountService.GetUserAccount(UUID.Zero, userID);
+            UserAccount account = accountService.GetUserAccount(null, userID);
 
             //Null means it went through without an error
-            bool Verified = loginService.VerifyClient(account.PrincipalID, account.Name, "UserAccount", Password, account.ScopeID);
+            bool Verified = loginService.VerifyClient(account.PrincipalID, account.Name, "UserAccount", Password);
 
             if ((auths.Authenticate(userID, "UserAccount", Password.StartsWith("$1$") ? Password.Remove(0, 3) : Util.Md5Hash(Password), 100) != string.Empty) && (Verified))
             {
@@ -1744,7 +1744,7 @@ namespace Aurora.Services
             string Password = map["Password"].AsString();
 
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, UUDI);
+            UserAccount user = accountService.GetUserAccount(null, UUDI);
 
             OSDMap resp = new OSDMap();
             bool verified = user != null;
@@ -1785,8 +1785,8 @@ namespace Aurora.Services
             GridRegion currentRegion = null;
             if (userinfo != null)
             {
-                homeRegion = gs.GetRegionByUUID(UUID.Zero, userinfo.HomeRegionID);
-                currentRegion = userinfo.CurrentRegionID != UUID.Zero ? gs.GetRegionByUUID(UUID.Zero, userinfo.CurrentRegionID) : null;
+                homeRegion = gs.GetRegionByUUID(null, userinfo.HomeRegionID);
+                currentRegion = userinfo.CurrentRegionID != UUID.Zero ? gs.GetRegionByUUID(null, userinfo.CurrentRegionID) : null;
             }
 
             resp["UUID"] = OSD.FromUUID(user.PrincipalID);
@@ -1811,10 +1811,10 @@ namespace Aurora.Services
 
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
             IGridService gs = m_registry.RequestModuleInterface<IGridService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, new UUID(userinfo.UserID));
+            UserAccount user = accountService.GetUserAccount(null, new UUID(userinfo.UserID));
 
-            GridRegion homeRegion = gs.GetRegionByUUID(UUID.Zero, userinfo.HomeRegionID);
-            GridRegion currentRegion = userinfo.CurrentRegionID != UUID.Zero ? gs.GetRegionByUUID(UUID.Zero, userinfo.CurrentRegionID) : null;
+            GridRegion homeRegion = gs.GetRegionByUUID(null, userinfo.HomeRegionID);
+            GridRegion currentRegion = userinfo.CurrentRegionID != UUID.Zero ? gs.GetRegionByUUID(null, userinfo.CurrentRegionID) : null;
 
             resp["UUID"] = OSD.FromUUID(user.PrincipalID);
             resp["HomeUUID"] = OSD.FromUUID((homeRegion == null) ? UUID.Zero : homeRegion.RegionID);
@@ -1844,7 +1844,7 @@ namespace Aurora.Services
             uuid = map["UUID"].AsString();
 
             IUserAccountService accountService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount user = accountService.GetUserAccount(UUID.Zero, map["UUID"].AsUUID());
+            UserAccount user = accountService.GetUserAccount(null, map["UUID"].AsUUID());
             IAgentInfoService agentService = m_registry.RequestModuleInterface<IAgentInfoService>();
 
             OSDMap resp = new OSDMap();
@@ -1873,7 +1873,7 @@ namespace Aurora.Services
                 return resp;
             }
 
-            UserAccount account = Name != "" ? accountService.GetUserAccount(UUID.Zero, Name) : accountService.GetUserAccount(UUID.Zero, userID);
+            UserAccount account = Name != "" ? accountService.GetUserAccount(null, Name) : accountService.GetUserAccount(null, userID);
             if (account != null)
             {
                 OSDMap accountMap = new OSDMap();
@@ -1905,7 +1905,7 @@ namespace Aurora.Services
                     IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile.ToString();
 
                     accountMap["AccountInfo"] = (profile.CustomType != "" ? profile.CustomType : account.UserFlags == 0 ? "Resident" : "Admin") + "\n" + flags;
-                    UserAccount partnerAccount = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, profile.Partner);
+                    UserAccount partnerAccount = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, profile.Partner);
                     if (partnerAccount != null)
                     {
                         accountMap["Partner"] = partnerAccount.Name;
@@ -1957,7 +1957,7 @@ namespace Aurora.Services
                 uint start = map.ContainsKey("Start") ? map["Start"].AsUInteger() : 0;
                 uint count = map.ContainsKey("Count") ? map["Count"].AsUInteger() : 10;
                 string Query = map["Query"].AsString();
-                List<UserAccount> accounts = accountService.GetUserAccounts(scopeID, Query, start, count);
+                List<UserAccount> accounts = accountService.GetUserAccounts(null, Query, start, count);
 
                 OSDArray users = new OSDArray();
                 MainConsole.Instance.TraceFormat("{0} accounts found", accounts.Count);
@@ -1982,7 +1982,7 @@ namespace Aurora.Services
                 resp["Start"] = OSD.FromInteger(start);
                 resp["Count"] = OSD.FromInteger(count);
                 resp["Query"] = OSD.FromString(Query);
-                resp["Total"] = OSD.FromInteger((int)accountService.NumberOfUserAccounts(scopeID, Query));
+                resp["Total"] = OSD.FromInteger((int)accountService.NumberOfUserAccounts(null, Query));
             }
 
             return resp;
@@ -2011,7 +2011,7 @@ namespace Aurora.Services
             OSDArray friends = new OSDArray(friendsList.Count);
             foreach (FriendInfo friendInfo in friendsList)
             {
-                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, UUID.Parse(friendInfo.Friend));
+                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, UUID.Parse(friendInfo.Friend));
                 OSDMap friend = new OSDMap(4);
                 friend["PrincipalID"] = friendInfo.Friend;
                 friend["Name"] = account.Name;
@@ -2100,7 +2100,7 @@ namespace Aurora.Services
                 {
                     regionID = userinfo.HomeRegionID;
                 }
-                if (gridService.GetRegionByUUID(UUID.Zero, regionID) == null)
+                if (gridService.GetRegionByUUID(null, regionID) == null)
                 {
                     fail.Add("region does not exist");
                 }
@@ -2520,7 +2520,7 @@ namespace Aurora.Services
                 }
                 else
                 {
-                    List<GridRegion> regions = regiondata.Get(x, y, scope);
+                    List<GridRegion> regions = regiondata.Get(x, y, null);
                     OSDArray Regions = new OSDArray();
                     foreach (GridRegion region in regions)
                     {
@@ -2567,7 +2567,7 @@ namespace Aurora.Services
                 }
                 else
                 {
-                    List<GridRegion> regions = regiondata.Get(StartX, StartY, EndX, EndY, scope);
+                    List<GridRegion> regions = regiondata.Get(StartX, StartY, EndX, EndY, null);
                     OSDArray Regions = new OSDArray();
                     foreach (GridRegion region in regions)
                     {
@@ -2632,11 +2632,11 @@ namespace Aurora.Services
                 GridRegion region = null;
                 if (regionID != UUID.Zero)
                 {
-                    region = regiondata.Get(regionID, scopeID);
+                    region = regiondata.Get(regionID, null);
                 }
                 else if (regionName != string.Empty)
                 {
-                    List<GridRegion> regions = regiondata.Get(regionName, scopeID, null, null);
+                    List<GridRegion> regions = regiondata.Get(regionName, null, null, null);
                     region = regions.Count > 0 ? regions[0] : null;
                 }
                 if (region != null)
@@ -2656,7 +2656,7 @@ namespace Aurora.Services
             {
                 List<GridRegion> regions = regiondata.GetNeighbours(
                     UUID.Parse(map["RegionID"].ToString()),
-                    map.ContainsKey("ScopeID") ? UUID.Parse(map["ScopeID"].ToString()) : UUID.Zero,
+                    null,
                     map.ContainsKey("Range") ? uint.Parse(map["Range"].ToString()) : 128
                 );
                 OSDArray Regions = new OSDArray(regions.Count);
@@ -2702,7 +2702,7 @@ namespace Aurora.Services
                 uint count = map.ContainsKey("Count") ? uint.Parse(map["Count"].ToString()) : 10;
                 ParcelFlags flags = map.ContainsKey("Flags") ? (ParcelFlags)int.Parse(map["Flags"].ToString()) : ParcelFlags.None;
                 ParcelCategory category = map.ContainsKey("Category") ? (ParcelCategory)uint.Parse(map["Flags"].ToString()) : ParcelCategory.Any;
-                uint total = directory.GetNumberOfParcelsByRegion(RegionID, ScopeID, owner, flags, category);
+                uint total = directory.GetNumberOfParcelsByRegion(RegionID, owner, flags, category);
                 if (total > 0)
                 {
                     resp["Total"] = OSD.FromInteger((int)total);
@@ -2710,7 +2710,7 @@ namespace Aurora.Services
                     {
                         return resp;
                     }
-                    List<LandData> parcels = directory.GetParcelsByRegion(start, count, RegionID, ScopeID, owner, flags, category);
+                    List<LandData> parcels = directory.GetParcelsByRegion(start, count, RegionID, owner, flags, category);
                     OSDArray Parcels = new OSDArray(parcels.Count);
                     parcels.ForEach(delegate(LandData parcel)
                     {
@@ -2745,7 +2745,7 @@ namespace Aurora.Services
                 }
                 else
                 {
-                    uint total = directory.GetNumberOfParcelsWithNameByRegion(RegionID, ScopeID, name);
+                    uint total = directory.GetNumberOfParcelsWithNameByRegion(RegionID, name);
                     if (total > 0)
                     {
                         resp["Total"] = OSD.FromInteger((int)total);
@@ -2753,7 +2753,7 @@ namespace Aurora.Services
                         {
                             return resp;
                         }
-                        List<LandData> parcels = directory.GetParcelsWithNameByRegion(start, count, RegionID, ScopeID, name);
+                        List<LandData> parcels = directory.GetParcelsWithNameByRegion(start, count, RegionID, name);
                         OSDArray Parcels = new OSDArray(parcels.Count);
                         parcels.ForEach(delegate(LandData parcel)
                         {
@@ -2804,7 +2804,7 @@ namespace Aurora.Services
                 }
                 else if (regionID != UUID.Zero && parcelName != string.Empty)
                 {
-                    parcel = directory.GetParcelInfo(regionID, scopeID, parcelName);
+                    parcel = directory.GetParcelInfo(regionID, parcelName);
                 }
 
                 if (parcel != null)
@@ -3199,7 +3199,7 @@ namespace Aurora.Services
 
                 IGroupsServiceConnector groups = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
                 IUserAccountService users = m_registry.RequestModuleInterface<IUserAccountService>();
-                UserAccount Author = AuthorID != UUID.Zero && users != null ? users.GetUserAccount(UUID.Zero, AuthorID) : null;
+                UserAccount Author = AuthorID != UUID.Zero && users != null ? users.GetUserAccount(null, AuthorID) : null;
 
                 if (GroupID == UUID.Zero)
                 {
