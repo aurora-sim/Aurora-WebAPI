@@ -109,10 +109,10 @@ namespace OpenSim.Services
                 m_server2.AddHTTPHandler("MapTexture", OnHTTPGetMapImage);
                 gridInfo["WireduxTextureServer"] = m_server2.ServerURI;
 
-                MainConsole.Instance.Commands.AddCommand("webui promote user", "Grants the specified user administrative powers within webui.", "webui promote user", PromoteUser);
-                MainConsole.Instance.Commands.AddCommand("webui demote user", "Revokes administrative powers for webui from the specified user.", "webui demote user", DemoteUser);
-                MainConsole.Instance.Commands.AddCommand("webui add user", "Deprecated alias for webui promote user.", "webui add user", PromoteUser);
-                MainConsole.Instance.Commands.AddCommand("webui remove user", "Deprecated alias for webui demote user.", "webui remove user", DemoteUser);
+                MainConsole.Instance.Commands.AddCommand("webui promote user", "Grants the specified user administrative powers within webui.", "webui promote user", PromoteUser, false, true);
+                MainConsole.Instance.Commands.AddCommand("webui demote user", "Revokes administrative powers for webui from the specified user.", "webui demote user", DemoteUser, false, true);
+                MainConsole.Instance.Commands.AddCommand("webui add user", "Deprecated alias for webui promote user.", "webui add user", PromoteUser, false, true);
+                MainConsole.Instance.Commands.AddCommand("webui remove user", "Deprecated alias for webui demote user.", "webui remove user", DemoteUser, false, true);
             }
         }
 
@@ -339,7 +339,7 @@ namespace OpenSim.Services
 
         #region Console Commands
 
-        private void PromoteUser (string[] cmd)
+        private void PromoteUser (IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt ("Name of user");
             UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount(null, name);
@@ -365,7 +365,7 @@ namespace OpenSim.Services
             m_log.Warn ("Admin added");
         }
 
-        private void DemoteUser (string[] cmd)
+        private void DemoteUser (IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt ("Name of user");
             UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount(null, name);
